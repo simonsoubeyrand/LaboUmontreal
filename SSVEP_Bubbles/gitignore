@@ -1,5 +1,6 @@
 # Ignore results folder
 results/*.mat
+results/
 
 # Ignore stim folder
 stimuli/
