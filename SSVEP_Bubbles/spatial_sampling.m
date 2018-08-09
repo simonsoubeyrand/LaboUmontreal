@@ -5,8 +5,8 @@ function spatial_sampling
 
 %   Author:     Simon Faghel-Soubeyrand
 %   Date:       feb/2018
-%   Version:    1
-%   Tested by:  _____________
+%   Version:    1 
+%   Tested by:  _____________ 
 
 % TO ADJUST DISTANCE
 % Distance must be ajusted so that the width of the image is 6 deg of
@@ -54,12 +54,6 @@ numlines     = 1;
 answer       = inputdlg(prompt,DatString,numlines);
 params.blockNb      = str2double(answer{1});
 
-% number of bubbles
-prompt       = {'Enter the number of bubbles to show at the begining of the block'};
-DatString    = 'Experiment setup';
-numlines     = 1;
-answer       = inputdlg(prompt,DatString,numlines);
-params.qteBulles  = str2double(answer{1});
 
 % define parameters
 prompt       = {'Enter the Display''s CFG name (e.g. labo EEG)'};
@@ -136,11 +130,10 @@ params.StimuliPath    = StimuliPath;
 params.resultsPath    = resultsPath;
 params.ImSize         = 497;
 params.displ          = zeros(params.ImSize);
-params.nTrials        = 20;
+params.nTrials        = 100;
 params.QuitKeys       = KbName('escape');
 params.instrupath     = instrucPath;
 params.fixrange       = (params.ImSize/2)-3:(params.ImSize/2)+3;
-% params.FixIm          = zeros(params.ImSize);params.FixIm(params.fixrange,params.fixrange)=.5;
 
 
 
@@ -148,15 +141,8 @@ StimPath = fullfile(params.StimuliPath,'cc_ims.mat');
 load (StimPath,'cc_ims');
 
 im = cc_ims;
-
-
-%%
-
-% -------------------------------------------------------------------------------------------------------------------
-%
-% TEST VALIDITY OF INPUT ARGUMENTS AND MAKE APPROPRIATE INITS
-% 
-% -------------------------------------------------------------------------------------------------------------------
+load (strcat(params.StimuliPath,'/maskellipse.mat'));
+facemask=logical(squeeze(double(facemask(:,:,1))));
 
 % cid-file-already-exists test
 file_name = sprintf('Bubbles_SSVEP_%s_%s_%d.mat', params.name, params.condition,params.blockNb);
@@ -168,6 +154,30 @@ if fid>0
 end
 
 KbName('UnifyKeyNames');
+if params.blockNb==1
+% number of bubbles
+prompt       = {'Enter the number of bubbles to show at the begining of the block'};
+DatString    = 'Experiment setup';
+numlines     = 1;
+answer       = inputdlg(prompt,DatString,numlines);
+params.qteBulles  = str2double(answer{1});
+else
+previousfile_name = sprintf('Bubbles_SSVEP_%s_%s_%d.mat', params.name, params.condition,params.blockNb-1);
+fullPath = fullfile(params.resultsPath,previousfile_name); 
+lastBlck=load(fullPath);
+params.qteBulles=ceil(mean(lastBlck.cid.data(5,(end-20):end)));
+params.blockNb
+end
+
+
+%%
+
+% -------------------------------------------------------------------------------------------------------------------
+%
+% TEST VALIDITY OF INPUT ARGUMENTS AND MAKE APPROPRIATE INITS
+% 
+% -------------------------------------------------------------------------------------------------------------------
+
 
 % -------------------------------------------------------------------------------------------------------------------
 %
@@ -180,10 +190,14 @@ try
 
 seed_0 = round(sum(100*clock));
 cid.noise = sprintf('initial seed value = %d', seed_0);
+cid.participant=params.name;
 cid.dataLabels = 'gender_face1 face1_nb face2_nb right_left_flip nb_bubbles overlap_target response RT accuracy simi2target';
 nbColumns = 11;
 
 rng('shuffle')%  rand('state', round(sum(100*clock)));
+
+cid.seed=rng;
+
 
 nTrials=params.nTrials;
 nBubbles=params.qteBulles;
@@ -223,20 +237,19 @@ surface=QuestMean(q);
 % Display controls
 bkg=127;
 
-
 GetChar;
 HideCursor;
 % ----------------------------------------------------------------------------------------------------------
 % INSTRUCTIONS
 % ----------------------------------------------------------------------------------------------------------
 fileInstru=fullfile(params.instrupath,file_instru);
-XpInstruction(fileInstru,'m')                         % Get .m text instruction and display on different screen before begining task
+XpInstruction(fileInstru,'m',params.name)                         % Get .m text instruction and display on different screen before begining task
 
 
 % ----------------------------------------------------------------------------------------------------------
 % INITIALIZE ON- AND OFF-SCREENS
 % -----------------------------------------------------------------------------------------------------------
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 AssertOpenGL;
 screens=Screen('Screens');
 screenNumber=max(screens);
@@ -251,13 +264,12 @@ Screen('Flip', window);
 % EXPERIMENTAL LOOP
 %
 % -----------------------------------------------------------------------------------------------------------
-% Initialize the pseudo-random fonction
-rng('shuffle')%  rand('state', round(sum(100*clock)));rand('state', seed_0);
 
 % ellipse=SmoothCi(imresize(ellipse,[params.ImSize  params.ImSize]),2);
-ellipse=fabriquer_ellipse(params.ImSize,.6*pi,.8*pi);
-masque=ellipse;% max(sum((ellipse==1))) for width of face in pixels.
+% ellipse=fabriquer_ellipse(params.ImSize,.6*pi,.8*pi);
+masque=facemask;%ellipse;% max(sum((ellipse==1))) for width of face in pixels.
 quitXP=0;
+KbWait;
 for trial=1:nTrials
     
     % ----------------------------------------------------------------------------------------------------------
@@ -342,7 +354,7 @@ for trial=1:nTrials
                 accuracy = 1;
             end
     end
-    cid.data(9,trial) = accuracy
+    cid.data(9,trial) = accuracy;
     
     
     % UPDATE QUEST
@@ -393,20 +405,11 @@ end
 
 end
 
-
-
-
-
-
-
-    % ----------------------------------------------------------------------------------------------------------
-    %
-    % FUNCTIONS
-    % 
-    % -----------------------------------------------------------------------------------------------------------
-   
-
-
+% ----------------------------------------------------------------------------------------------------------
+%
+% FUNCTIONS
+%
+% % ----------------------------------------------------------------------------------------------------------
 % function XpInstruction(fileName,format)
 % % %  XpInstruction displays a given format file on Screen until keypress
 % %
@@ -415,9 +418,7 @@ end
 % %   Version:    1
 % %   Tested by:  Frederic Gosselin
 % 
-% 
-% 
-% Screen('Preference', 'SkipSyncTests', 1); % uncomment if necessary
+% Screen('Preference', 'SkipSyncTests', 0); % uncomment if necessary
 % 
 % % Psychophysics inits
 % AssertOpenGL;
@@ -436,7 +437,7 @@ end
 % Screen('TextSize',w, 23);
 % Screen('TextStyle', w, 1);
 % 
-% 
+% WatSecs(2);
 % % Read some text file, if existing. .m are prefered...
 % fid = fopen(sprintf('%s.%s', fileName,format),'r');
 % 
@@ -477,12 +478,14 @@ end
 % 
 % Screen('DrawText', w, 'Appuyez une touche sur le clavier pour débuter', xCenter-250, ny+50, [0, 100, 100, 255]);
 % Screen('Flip',w);
-% sca;
+% WaitSecs(.5);
 % KbWait;
-% 
-% 
+% % clear Screen screens
+% sca
 % 
 % end
+
+
 
 
 function [BestGuess,minBulle,surfaceBulle]= bubbles_questGuest(qteBulles,spaceSize,bubStd)
@@ -504,7 +507,7 @@ BestGuess=((qteBulles*surfaceBulle)/spaceSize.^2)-minBulle;
 end
 
 function bulle=bubble(bubStd)
-% a single bubble 
+% a single bubble
 maxHalfSize = 6*bubStd;
 [y,x] = meshgrid(-maxHalfSize:maxHalfSize,-maxHalfSize:maxHalfSize);
 bulle = exp(-(x.^2/bubStd^2)-(y.^2/bubStd^2));
