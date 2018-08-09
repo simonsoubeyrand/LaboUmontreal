@@ -1,16 +1,15 @@
 # Ignore results folder
-SSVEP_Bubbles/results/
+results/
 
 # Ignore stim folder
-SSVEP_Bubbles/stimuli/
+stimuli/
 
 # Ignore stim folder
-SSVEP_Bubbles/Stimuli_final/
+Stimuli_final/
 
 # Ignore protocole
 *.docx
 *.doc 
-SSVEP_Bubbles/Procedure_EEG.docx
 
 # Ignore ongoing matlab files
 *.m~
