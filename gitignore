@@ -11,3 +11,6 @@ SSVEP_Bubbles/Stimuli_final/
 *.docx
 *.doc 
 SSVEP_Bubbles/Procedure_EEG.docx
+
+# Ignore all editing matlab files
+*.m~
