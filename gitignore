@@ -1,0 +1,13 @@
+# Ignore results folder
+SSVEP_Bubbles/results/
+
+# Ignore stim folder
+SSVEP_Bubbles/stimuli/
+
+# Ignore stim folder
+SSVEP_Bubbles/Stimuli_final/
+
+# Ignore protocole
+*.docx
+*.doc 
+SSVEP_Bubbles/Procedure_EEG.docx
