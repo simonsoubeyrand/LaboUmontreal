@@ -1,5 +1,4 @@
-
-function XpInstruction(fileName,format)
+function XpInstruction(fileName,format,participantsname)
 % %  XpInstruction displays a given format file on Screen until keypress
 %
 %   Author:     Simon Faghel-Soubeyrand
@@ -7,7 +6,7 @@ function XpInstruction(fileName,format)
 %   Version:    1
 %   Tested by:  Frederic Gosselin
 
-Screen('Preference', 'SkipSyncTests', 1); % uncomment if necessary
+Screen('Preference', 'SkipSyncTests', 0); % uncomment if necessary
 
 % Psychophysics inits
 AssertOpenGL;
@@ -58,16 +57,19 @@ catch e
 end
 
 fclose(fid);
-text = [text newline];
+text = [text tl];
 
 % Draw centered text inside frame
 [nx, ny, bbox] = DrawFormattedText(w, text, 'center', 'center', 0);
 
+bienvenido=sprintf('Bienvenue %s !',participantsname);
+Screen('DrawText', w, bienvenido, xCenter-125, yCenter-200, [0 0 0]);
+
 Screen('FrameRect', w, [10 10 10], bbox+[-20 -20 +20 +20],3);
 
-Screen('DrawText', w, 'Appuyez une touche sur le clavier pour débuter', xCenter-250, ny+50, [0, 100, 100, 255]);
+Screen('DrawText', w, 'Appuyez une touche sur le clavier pour débuter', xCenter-250, ny+50, [50, 100, 50, 255]);
 Screen('Flip',w);
-WaitSecs(.5);
+WaitSecs(.75);
 KbWait;
 clear Screen screens
 sca
